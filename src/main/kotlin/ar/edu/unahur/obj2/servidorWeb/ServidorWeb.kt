@@ -11,4 +11,9 @@ enum class CodigoHttp(val codigo: Int) {
 }
 
 class Pedido(val ip: String, val url: String, val fechaHora: LocalDateTime)
+
 class Respuesta(val codigo: CodigoHttp, val body: String, val tiempo: Int, val pedido: Pedido)
+
+class Modulos(var extenciones:List<Any>,respuesta: Respuesta,tiempo: Int)
+
+class Analizadores(val demoraMinima:Int,var ipsPeligrosas:List<Any>)
