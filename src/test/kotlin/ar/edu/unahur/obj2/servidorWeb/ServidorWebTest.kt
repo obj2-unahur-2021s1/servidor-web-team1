@@ -20,7 +20,9 @@ class ServidorWebTest : DescribeSpec({
     servidor1.cumpleConElProtocolo(pedido2).shouldBe(CodigoHttp.NOT_IMPLEMENTED)
 
       //Requerimiento2
-
+      val servidor2=servidorWeb(Imagen)
+    servidor2.cumpleConElProtocolo(pedido1).shouldBe(CodigoHttp.OK)
+      servidor1.cumpleConElProtocolo(pedido2).shouldBe(CodigoHttp.NOT_IMPLEMENTED)
 
   }
 })

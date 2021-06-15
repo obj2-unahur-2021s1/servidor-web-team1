@@ -18,16 +18,21 @@ class Respuesta(val codigo: CodigoHttp, val body: String, val tiempo: Int, val p
 class Analizadores(val demoraMinima:Int,var ipsPeligrosas:List<Any>)
 
 interface Modulo
+{
+
+}
 object Imagen: Modulo {
   var extenciones = mutableListOf<Any>("jpg", "png", "gif")
+    fun puedeAtenderAlPedido(pedido: Pedido)= Texto.extenciones.any { extencion->extencion==pedido.url.extension }
   fun devuelve(){}
-  fun cuantoTarda(){}
+  fun cuantoTarda()=15
 }
 
 object Texto: Modulo {
   var extenciones = mutableListOf<Any>("docx", "png", "odt")
-  fun devuelve(){}
-  fun cuantoTarda(){}
+  fun puedeAtenderAlPedido(pedido: Pedido)= extenciones.any { extencion->extencion==pedido.url.extension }
+    fun devuelve(){}
+  fun cuantoTarda()=15
 }
 
 class servidorWeb(val modulo: Modulo? =null) //= null
