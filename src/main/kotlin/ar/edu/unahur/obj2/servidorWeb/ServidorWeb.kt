@@ -19,18 +19,18 @@ class Analizadores(val demoraMinima:Int,var ipsPeligrosas:List<Any>)
 
 interface Modulo
 object Imagen: Modulo {
-  var extenciones = ["jpg", "png", "gif"]
+  var extenciones = mutableListOf<Any>("jpg", "png", "gif")
   fun devuelve(){}
   fun cuantoTarda(){}
 }
 
 object Texto: Modulo {
-  var extenciones = ["docx", "odt"]
+  var extenciones = mutableListOf<Any>("docx", "png", "odt")
   fun devuelve(){}
   fun cuantoTarda(){}
 }
 
-class servidorWeb(val modulo: Modulo ) //= null
+class servidorWeb(val modulo: Modulo? =null) //= null
 {
 
   fun cumpleConElProtocolo(pedido: Pedido): CodigoHttp {
