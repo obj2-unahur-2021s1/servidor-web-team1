@@ -5,7 +5,8 @@ import io.kotest.matchers.shouldBe
 import java.time.LocalDateTime
 
 class ServidorWebTest : DescribeSpec({
-  describe("Un servidor web") {
+  describe("Un servidor web")
+  {
 
   }
 })
