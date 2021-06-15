@@ -10,8 +10,49 @@ enum class CodigoHttp(val codigo: Int) {
   NOT_FOUND(404),
 }
 
-class Pedido(val ip: String, val url: String, val fechaHora: LocalDateTime)
+class Pedido(val ip: String, val url: URL, val fechaHora: LocalDateTime)
 
 class Respuesta(val codigo: CodigoHttp, val body: String, val tiempo: Int, val pedido: Pedido)
+
+
+class Analizadores(val demoraMinima:Int,var ipsPeligrosas:List<Any>)
+
+interface Modulo
+object Imagen: Modulo {
+  var extenciones = ["jpg", "png", "gif"]
+  fun devuelve(){}
+  fun cuantoTarda(){}
+}
+
+object Texto: Modulo {
+  var extenciones = ["docx", "odt"]
+  fun devuelve(){}
+  fun cuantoTarda(){}
+}
+
+class servidorWeb(val modulo: Modulo ) //= null
+{
+
+  fun cumpleConElProtocolo(pedido: Pedido): CodigoHttp {
+    if(pedido.url.cumpleConProtocolo()) {
+      return CodigoHttp.OK
+    }
+    else {
+      return CodigoHttp.NOT_IMPLEMENTED
+    }
+  }
+  /*
+  fun recibirPedido(pedido: Pedido) {
+    if(modulo == null) {
+
+    }
+  }*/
+}
+
+class URL(val protocolo: String, val ruta: String, val extension: String)
+{
+  fun cumpleConProtocolo()= protocolo=="http"
+
+}
 
 
