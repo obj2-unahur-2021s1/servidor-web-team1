@@ -12,52 +12,63 @@ enum class CodigoHttp(val codigo: Int) {
 
 class Pedido(val ip: String, val url: URL, val fechaHora: LocalDateTime)
 
-class Respuesta(val codigo: CodigoHttp, val body: String, val tiempo: Int, val pedido: Pedido)
+data class Respuesta(val codigo: CodigoHttp, val body: String, val tiempo: Int, val pedido: Pedido)
 
-
-class Analizadores(val demoraMinima:Int,var ipsPeligrosas:List<Any>)
-
-interface Modulo
-{
-
-}
-object Imagen: Modulo {
-  var extenciones = mutableListOf<Any>("jpg", "png", "gif")
-    fun puedeAtenderAlPedido(pedido: Pedido)= Texto.extenciones.any { extencion->extencion==pedido.url.extension }
-  fun devuelve(){}
-  fun cuantoTarda()=15
-}
-
-object Texto: Modulo {
-  var extenciones = mutableListOf<Any>("docx", "png", "odt")
-  fun puedeAtenderAlPedido(pedido: Pedido)= extenciones.any { extencion->extencion==pedido.url.extension }
-    fun devuelve(){}
-  fun cuantoTarda()=15
-}
-
-class servidorWeb(val modulo: Modulo? =null) //= null
-{
-
-  fun cumpleConElProtocolo(pedido: Pedido): CodigoHttp {
-    if(pedido.url.cumpleConProtocolo()) {
-      return CodigoHttp.OK
-    }
-    else {
-      return CodigoHttp.NOT_IMPLEMENTED
-    }
-  }
-  /*
-  fun recibirPedido(pedido: Pedido) {
-    if(modulo == null) {
-
-    }
-  }*/
-}
 
 class URL(val protocolo: String, val ruta: String, val extension: String)
 {
-  fun cumpleConProtocolo()= protocolo=="http"
+  fun cumpleConProtocolo() = protocolo=="http"
+}
+
+class servidorWeb {
+
+  var modulos = mutableListOf<Modulo>()
+
+  fun agregarModulo(modulo: Modulo) {
+    modulos.add(modulo)
+  }
+
+  fun sacarModulo(modulo: Modulo) {
+    modulos.remove(modulo)
+  }
+
+  fun cumpleConElProtocolo(pedido: Pedido): String {
+    return if(!pedido.url.cumpleConProtocolo()) {
+      Respuesta(CodigoHttp.NOT_IMPLEMENTED, "", 10, pedido).darRespuesta()
+    }
+    else {
+      Respuesta(CodigoHttp.OK, "", 10, pedido).darRespuesta()
+    }
+  }
+
+  fun puedeResponder(pedido: Pedido) = modulos.any{m->m.puedeAtenderAlPedido(pedido)}
+
+  fun recibirUnPedido(pedido: Pedido): String {
+    return if(puedeResponder(pedido) and pedido.url.cumpleConProtocolo())  {
+      Respuesta(CodigoHttp.OK, "", 10, pedido).darRespuesta()
+    }
+    else
+    {
+      Respuesta(CodigoHttp.NOT_FOUND, "", 10, pedido).darRespuesta()
+    }
+  }
+}
+
+interface Modulo
+{
+  fun puedeAtenderAlPedido(pedido: Pedido): Boolean
+}
+
+object Imagen: Modulo {
+  var extenciones = mutableListOf<Any>("jpg", "png", "gif")
+  override fun puedeAtenderAlPedido(pedido: Pedido) = extenciones.any { extencion->extencion==pedido.url.extension }
 
 }
 
+object Texto: Modulo {
+  var extenciones = mutableListOf<Any>("docx", "odt")
+  override fun puedeAtenderAlPedido(pedido: Pedido)= extenciones.any { extencion->extencion==pedido.url.extension }
 
+}
+
+class Analizadores(val demoraMinima:Int,var ipsPeligrosas:List<Any>)
