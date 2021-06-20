@@ -27,7 +27,7 @@ class ServidorWebTest : DescribeSpec({
       servidor2.agregarModulo(Imagen)
       servidor2.recibirUnPedido(pedido1).shouldBe(Respuesta(CodigoHttp.OK,"Funciona",5,pedido1))
     }
-      it("Requerimiento 3 con analizadores")
+      it("Requerimiento 3 con analizadores ips Sopechosas")
       {
         val analizador1=Analizadores(4, listOf("12312", "123124334") )
         val servidor3 = servidorWeb()
@@ -35,6 +35,10 @@ class ServidorWebTest : DescribeSpec({
           servidor3.agregarAnalizador(analizador1)
           servidor3.recibirUnPedido(pedido1).shouldBe(Respuesta(CodigoHttp.OK, "Funciona", 5, pedido1))
           analizador1.cantidadDeRespuestasDemoradasDelModulo(Imagen).shouldBe(1)
+      }
+      it("Requerimiento 3 con analizadores estadisticas")
+      {
+
       }
   }
 })

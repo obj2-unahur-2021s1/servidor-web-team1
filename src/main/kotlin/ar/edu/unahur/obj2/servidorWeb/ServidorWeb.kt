@@ -15,6 +15,7 @@ class Pedido(val ip: String, val url: URL, val fechaHora: LocalDateTime)
 data class Respuesta(val codigo: CodigoHttp, val body: String, val tiempo: Int, val pedido: Pedido) {
 
     fun esRespuestaDemorada(tiempoAnalizadores: Int) = tiempo > tiempoAnalizadores
+    fun eSRespuestaExistosa()=this.codigo== CodigoHttp.OK
 }
 
 
@@ -25,6 +26,7 @@ class URL(val protocolo: String, val ruta: String, val extension: String)
     fun esCompatibleConModulo(modulo:Modulo): Boolean {
         return modulo.estaLaExtension(extension)
     }
+    fun esLaMismaRuta(ruta: String)= this.ruta==ruta
 }
 
 class servidorWeb {
@@ -130,7 +132,36 @@ class Analizadores(val demoraMinima:Int,var ipsPeligrosas:List<Any>)
         {return Imagen}
         else{return Texto}
     }
+    // el conjunto de IPs sospechosas que requirieron una cierta ruta.
+    fun ipsSospechosasConRuta(ruta:String):Set<Any>
+    {
+        //respuestas con la misma ruta
+        return respuestas.filter{c->c.pedido.url.esLaMismaRuta(ruta)}.map{it.pedido.ip}.intersect(ipsPeligrosas)
+    }
+    fun tiempoDeRepuestaPromedio():Int
+    {
+        //tiempo de respuesta promedio
+        return respuestas.sumBy{c->c.tiempo}/respuestas.size
 
+    }
 
+    //cantidad de pedidos entre dos momentos (fecha/hora) que fueron atendidos,
+    fun cantidadDePedidosEntre():Int
+    {
+        //No lo se
+            return 0
+    }
+    //cantidad de respuestas cuyo body incluye un determinado
+    fun cantidadDeRespuetaCutoBodyIncluye(string:Regex):Int
+    {
+        return respuestas.count{it.body.matches(string)}
 
+    }
+    //porcentaje de pedidos con respuesta exitosa
+    fun porcentajeDeRespuestasExitosas() :Int
+    {
+        val diviendo= respuestas.count{it.eSRespuestaExistosa()}
+        val divisor= respuestas.size
+        return divisor/diviendo
+    }
 }
