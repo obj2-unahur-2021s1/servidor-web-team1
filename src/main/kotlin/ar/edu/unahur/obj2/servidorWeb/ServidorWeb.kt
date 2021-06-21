@@ -15,33 +15,35 @@ class Pedido(val ip: String, val url: URL, val fechaHora: LocalDateTime)
 data class Respuesta(val codigo: CodigoHttp, val body: String, val tiempo: Int, val pedido: Pedido) {
 
     fun esRespuestaDemorada(tiempoAnalizadores: Int) = tiempo > tiempoAnalizadores
+
     fun eSRespuestaExistosa()=this.codigo== CodigoHttp.OK
+
 }
 
 
-class URL(val protocolo: String, val ruta: String, val extension: String)
-{
-  fun cumpleConProtocolo() = protocolo=="http"
+class URL(val protocolo: String, val ruta: String, val extension: String) {
+    fun cumpleConProtocolo() = protocolo=="http"
 
     fun esCompatibleConModulo(modulo:Modulo): Boolean {
         return modulo.estaLaExtension(extension)
     }
     fun esLaMismaRuta(ruta: String)= this.ruta==ruta
+
 }
 
-class servidorWeb {
+class ServidorWeb {
 
     var analizadores= mutableListOf<Analizadores>()
 
     var modulos = mutableListOf<Modulo>()
 
-  fun agregarModulo(modulo: Modulo) {
-    modulos.add(modulo)
-  }
+    fun agregarModulo(modulo: Modulo) {
+        modulos.add(modulo)
+    }
 
-  fun sacarModulo(modulo: Modulo) {
-    modulos.remove(modulo)
-  }
+    fun sacarModulo(modulo: Modulo) {
+        modulos.remove(modulo)
+    }
 
     fun agregarAnalizador(analizador: Analizadores) {
        analizadores.add(analizador)
@@ -51,61 +53,63 @@ class servidorWeb {
         analizadores.remove(analizador)
     }
 
-  fun cumpleConElProtocolo(pedido: Pedido): Respuesta {
-    return if(!pedido.url.cumpleConProtocolo())
-    {
-      Respuesta(CodigoHttp.NOT_IMPLEMENTED, "", 10, pedido)
+    fun cumpleConElProtocolo(pedido: Pedido): Respuesta {
+        return if(!pedido.url.cumpleConProtocolo()) {
+            Respuesta(CodigoHttp.NOT_IMPLEMENTED, "", 10, pedido)
+        } else {
+            Respuesta(CodigoHttp.OK, "", 10, pedido)
+        }
     }
-    else {
-      Respuesta(CodigoHttp.OK, "", 10, pedido)
-    }
-  }
 
-  fun puedeResponder(pedido: Pedido) = modulos.any{m->m.puedeAtenderAlPedido(pedido)}
+    fun puedeResponder(pedido: Pedido) = modulos.any{m->m.puedeAtenderAlPedido(pedido)}
 
-  fun recibirUnPedido(pedido: Pedido): Respuesta {
-    if(puedeResponder(pedido) and pedido.url.cumpleConProtocolo()){
-      val respuesta = Respuesta(CodigoHttp.OK, "Funciona",5, pedido)
-      analizadores.forEach { it.agregarRespuesta(respuesta) }
-
-      return respuesta
-    }
-    else
-    {
-      return Respuesta(CodigoHttp.NOT_FOUND, "", 10, pedido)
+    fun recibirUnPedido(pedido: Pedido): Respuesta {
+        if(this.puedeResponder(pedido) and pedido.url.cumpleConProtocolo()){
+            val moduloDelPedido = modulos.find { it.puedeAtenderAlPedido(pedido) }!!
+            val respuesta = Respuesta(CodigoHttp.OK, moduloDelPedido.texto, moduloDelPedido.tiempo, pedido)
+            analizadores.forEach { it.agregarRespuesta(respuesta) }
+            return respuesta
+        } else {
+            return Respuesta(CodigoHttp.NOT_FOUND, "", 10, pedido)
 
     }
   }
 }
 
-interface Modulo
-{
-  fun puedeAtenderAlPedido(pedido: Pedido): Boolean
-  fun estaLaExtension(extension: String): Boolean
+abstract class Modulo(val texto: String, val tiempo: Int) {
+
+    abstract fun puedeAtenderAlPedido(pedido: Pedido): Boolean
+
+    abstract fun estaLaExtension(extension: String): Boolean
 }
 
-object Imagen: Modulo {
-  var extenciones = mutableListOf<Any>("jpg", "png", "gif")
-  override fun puedeAtenderAlPedido(pedido: Pedido) = extenciones.any { extencion->extencion==pedido.url.extension }
+object Imagen: Modulo("Esto es una imagen", 3) {
 
-    fun tieneExtension(extension: Any): Boolean {
+    var extenciones = mutableListOf<Any>("jpg", "png", "gif")
+
+    override fun puedeAtenderAlPedido(pedido: Pedido) = extenciones.any { extencion->extencion==pedido.url.extension }
+
+    fun tieneExtension(extension: Any): Boolean {  ////
         return extenciones.contains(extension)
     }
 
-    override fun estaLaExtension(extension: String) = extenciones.any{c->c==extension}
+    override fun estaLaExtension(extension: String) = extenciones.any{c->c==extension} //
 
 }
 
-object Texto: Modulo {
-  var extenciones = mutableListOf<Any>("docx", "odt")
-  override fun puedeAtenderAlPedido(pedido: Pedido)= extenciones.any { extencion->extencion==pedido.url.extension }
+object Texto: Modulo("Esto es un texto", 8) {
 
-    override fun estaLaExtension(extension: String) = Imagen.extenciones.any{ c->c==extension}
+    var extenciones = mutableListOf<Any>("docx", "odt")
+
+    override fun puedeAtenderAlPedido(pedido: Pedido)= extenciones.any { extencion->extencion==pedido.url.extension }
+
+    override fun estaLaExtension(extension: String) = Imagen.extenciones.any{ c->c==extension}  //
 }
 
 class Analizadores(val demoraMinima:Int,var ipsPeligrosas:List<Any>)
 {
     var respuestas = mutableListOf<Respuesta>()
+
     var respuestasDeIpsSospechosas=mutableListOf<Respuesta>()
 
     fun agregarRespuesta(respuesta: Respuesta) {
@@ -114,42 +118,37 @@ class Analizadores(val demoraMinima:Int,var ipsPeligrosas:List<Any>)
 
     fun cantidadDeRespuestasDemoradasDelModulo(modulo: Modulo): Int {
         return respuestas.filter { c-> c.pedido.url.esCompatibleConModulo(modulo)}.count{c->c.esRespuestaDemorada(demoraMinima)}
-
     }
-
-
 
     fun respuestasConIpsSospechosas(): Int {
-        val ips = respuestas.map{it.pedido.ip}
-        return ips.intersect(ipsPeligrosas).size
+        val ipsDeRespuestas = respuestas.map{it.pedido.ip}
+        return ipsDeRespuestas.intersect(ipsPeligrosas).size
     }
 
-    fun elModuloMasConsultadoPorIps():Modulo
-    {
+    fun elModuloMasConsultadoPorIps(): Modulo {
         val pedidosImagen = respuestas.map{it.pedido.url.esCompatibleConModulo(Imagen)}.size
         val pedidosTexto = respuestas.map{it.pedido.url.esCompatibleConModulo(Texto)}.size
-        if(pedidosImagen>pedidosTexto)
-        {return Imagen}
-        else{return Texto}
+        if(pedidosImagen>pedidosTexto) {
+            return Imagen
+        } else {
+            return Texto}
     }
     // el conjunto de IPs sospechosas que requirieron una cierta ruta.
-    fun ipsSospechosasConRuta(ruta:String):Set<Any>
-    {
+
+    fun ipsSospechosasConRuta(ruta:String):Set<Any> {
         //respuestas con la misma ruta
         return respuestas.filter{c->c.pedido.url.esLaMismaRuta(ruta)}.map{it.pedido.ip}.intersect(ipsPeligrosas)
     }
-    fun tiempoDeRepuestaPromedio():Int
-    {
+    fun tiempoDeRepuestaPromedio():Int {
         //tiempo de respuesta promedio
         return respuestas.sumBy{c->c.tiempo}/respuestas.size
-
     }
 
-    //cantidad de pedidos entre dos momentos (fecha/hora) que fueron atendidos,
-    fun cantidadDePedidosEntre():Int
-    {
-        //No lo se
-            return 0
+
+    fun cantidadDePedidosEntre(fecha1: LocalDateTime, fecha2: LocalDateTime):Int {
+        val pedidosHasta= respuestas.filter { it.pedido.fechaHora > fecha1 }
+        val pedidosEntreFechas = pedidosHasta.filter { it.pedido.fechaHora < fecha2 }
+        return pedidosEntreFechas.size
     }
     //cantidad de respuestas cuyo body incluye un determinado
     fun cantidadDeRespuetaCutoBodyIncluye(string:Regex):Int
